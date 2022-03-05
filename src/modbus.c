@@ -4,10 +4,8 @@
 #include "uart.h"
 #include <string.h>
 
-void writeWithModbus(){
+void send_uart_request(int uart_filestream){
   int message_size  = 7;
-
-  initUartCfg();
 
   unsigned char message[200];
   unsigned char *msg_ptr = &message;
@@ -24,35 +22,34 @@ void writeWithModbus(){
 
   memcpy(&message[message_size],  &computed_crc, 2);
 
-  writeOnUart(message, message_size+2);
+  write_on_uart(uart_filestream, message, message_size+2);
 
-  closeUart();
 }
 
-void read_with_modbus(){
+float read_uart_response(int uart_filestream){
 
   short expected_crc, recieved_crc;
   int response_length;
   float temperature;
-  initUartCfg();
 
   unsigned char response[256];
 
-  response_length = readFromUart(response, 10);
-
-  printf("tamanho da resposta: %d\n", response_length);
-
-  // testar crc
-
+  response_length = read_from_uart(uart_filestream, response, 10);
+  if(response_length < 0){
+    return -1.0;
+  }
   memcpy(&recieved_crc, &response[7], 2);
   expected_crc = calcula_CRC(response, 7);  
 
   if(recieved_crc != expected_crc){
     printf("CRCs Diferem!\n");
+    temperature = -1.0;
+  }else if(response_length != 9){
+    printf("Tamanho da mensagem incorreto!\n");
+    temperature = -1.0;
+  }else{
+    memcpy(&temperature, &response[3], 4);
   }
 
-  memcpy(&temperature, &response[3], 4);
-  printf("temperatura recebida -> %f\n", temperature);
-  printf("Finalizei rotina de receber!\n");
-
+  return temperature;
 }

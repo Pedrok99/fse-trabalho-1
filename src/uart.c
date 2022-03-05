@@ -3,39 +3,40 @@
 #include <fcntl.h>          //Used for UART
 #include <termios.h>        //Used for UART
 #include <string.h>
+#include <stdlib.h>
 
-int uartFile = -1;
 
-int initUartCfg(){
-    uartFile = open("/dev/serial0", O_RDWR | O_NOCTTY | O_NDELAY);     
-    if (uartFile == -1)
+int init_uart(){
+    int uart_filestream = -1;
+    uart_filestream = open("/dev/serial0", O_RDWR | O_NOCTTY | O_NDELAY);     
+    if (uart_filestream == -1)
     {
         printf("Erro ao inicar UART.\n");
-        return -1;
+        exit(1);
     }
     else
     {
         printf("UART inicializada!\n");
     }    
     struct termios options;
-    tcgetattr(uartFile, &options);
+    tcgetattr(uart_filestream, &options);
     options.c_cflag = B9600 | CS8 | CLOCAL | CREAD;
     options.c_iflag = IGNPAR;
     options.c_oflag = 0;
     options.c_lflag = 0;
-    tcflush(uartFile, TCIFLUSH);
-    tcsetattr(uartFile, TCSANOW, &options);
+    tcflush(uart_filestream, TCIFLUSH);
+    tcsetattr(uart_filestream, TCSANOW, &options);
 
-    return 0;
+    return uart_filestream;
 }
 
-int writeOnUart(unsigned char *message, int messageSize){
+int write_on_uart(int uart_filestream, unsigned char *message, int messageSize){
 
     
-    if (uartFile != -1)
+    if (uart_filestream != -1)
     {
         printf("Escrevendo caracteres na UART ...");
-        int count = write(uartFile, message, messageSize);
+        int count = write(uart_filestream, message, messageSize);
         if (count < 0)
         {
             printf("UART TX error\n");
@@ -50,13 +51,13 @@ int writeOnUart(unsigned char *message, int messageSize){
     
 }
 
-int readFromUart(unsigned char* message, int messageSize){
-    usleep(300000);
+int read_from_uart(int uart_filestream, unsigned char* message, int messageSize){
+    usleep(100000);
     int rx_length = -1;
-    if (uartFile != -1)
+    if (uart_filestream != -1)
     {
         // Read up to 255 characters from the port if they are there
-        rx_length = read(uartFile, (void*)message, messageSize);      //Filestream, buffer to store in, number of bytes to read (max)
+        rx_length = read(uart_filestream, (void*)message, messageSize);      //Filestream, buffer to store in, number of bytes to read (max)
 
         if (rx_length < 0)
         {
@@ -75,6 +76,6 @@ int readFromUart(unsigned char* message, int messageSize){
     return rx_length;   
 }
 
-void closeUart(){
-    close(uartFile);
+void close_uart(int uart_filestream){
+    close(uart_filestream);
 }
