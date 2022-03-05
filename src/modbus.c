@@ -4,15 +4,15 @@
 #include "uart.h"
 #include <string.h>
 
-void send_uart_request(int uart_filestream){
+void send_uart_request(int uart_filestream, unsigned char code, unsigned char sub_code){
   int message_size  = 7;
 
   unsigned char message[200];
   unsigned char *msg_ptr = &message;
 
   *msg_ptr++ =0x01;
-  *msg_ptr++ =0x23;
-  *msg_ptr++ =0xC1;// code
+  *msg_ptr++ =code;
+  *msg_ptr++ =sub_code;
   *msg_ptr++ =0x01;
   *msg_ptr++ =0x02;
   *msg_ptr++ =0x03;
