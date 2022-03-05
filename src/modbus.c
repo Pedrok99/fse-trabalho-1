@@ -8,15 +8,15 @@ void send_uart_request(int uart_filestream, unsigned char code, unsigned char su
   int message_size  = 7;
 
   unsigned char message[200];
-  unsigned char *msg_ptr = &message;
+  unsigned char *msg_ptr = message;
 
   *msg_ptr++ =0x01;
   *msg_ptr++ =code;
   *msg_ptr++ =sub_code;
-  *msg_ptr++ =0x01;
+  *msg_ptr++ =0x09;
   *msg_ptr++ =0x02;
-  *msg_ptr++ =0x03;
-  *msg_ptr++ =0x04;
+  *msg_ptr++ =0x08;
+  *msg_ptr++ =0x07;
 
   short computed_crc = calcula_CRC(message, message_size);
 

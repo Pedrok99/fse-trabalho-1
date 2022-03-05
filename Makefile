@@ -1,26 +1,5 @@
-# # Executavel
-# BINFOLDER := bin/
-# # .h
-# INCFOLDER := inc/
-# # .c
-# SRCFOLDER := src/
-# # .o
-# OBJFOLDER := obj/
-# CC := gcc
-# CFLAGS := -W -Wall -pedantic
-# SRCFILES := $(wildcard src/*.c)
-# all: $(SRCFILES:src/%.c=obj/%.o)
-# 	$(CC) $(CFLAGS) obj/*.o -o bin/prog
-# obj/%.o: src/%.c
-# 	$(CC) $(CFLAGS) -c $< -o $@ -I./inc
-# run: bin/prog
-# 	bin/prog
-# .PHONY: clean
-# clean:
-# 	rm -rf obj/*
-# 	rm -rf bin/*
-
 C = gcc
+LFLAG = -lwiringPi
 BLDDIR = .
 INCDIR = $(BLDDIR)/inc
 SRCDIR = $(BLDDIR)/src
@@ -34,11 +13,11 @@ EXE = bin/bin
 all: clean $(EXE) 
     
 $(EXE): $(OBJ) 
-	$(CC) $(LDFLAGS) $(OBJDIR)/*.o -o $@ 
+	$(CC) $(OBJDIR)/*.o -o $@ $(LFLAG)
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAG)
 
 clean:
 	-rm -f $(OBJDIR)/*.o $(EXE)
