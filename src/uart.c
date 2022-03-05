@@ -29,23 +29,13 @@ int initUartCfg(){
     return 0;
 }
 
-int writeOnUart(int messageSize){
+int writeOnUart(unsigned char *message, int messageSize){
 
-    unsigned char msg[200];
-    unsigned char *msg_ptr = &msg;
-
-    *msg_ptr++ =0x01;
-    *msg_ptr++ =0x23;
-    *msg_ptr++ =0xC1;// code
-    *msg_ptr++ =0x01;
-    *msg_ptr++ =0x02;
-    *msg_ptr++ =0x03;
-    *msg_ptr++ =0x04;
     
     if (uartFile != -1)
     {
         printf("Escrevendo caracteres na UART ...");
-        int count = write(uartFile, &msg, messageSize);
+        int count = write(uartFile, message, messageSize);
         if (count < 0)
         {
             printf("UART TX error\n");

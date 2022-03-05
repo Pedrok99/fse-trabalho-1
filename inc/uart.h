@@ -2,7 +2,7 @@
 #define UART_H_
 
 int initUartCfg();
-int writeOnUart(int messageSize);
+int writeOnUart(unsigned char *message, int messageSize);
 void readFromUart(unsigned char* message, int messageSize);
 void closeUart();
 
