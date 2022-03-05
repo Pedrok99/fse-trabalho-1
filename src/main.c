@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "uart.h"
 
 int main(){
-  printf("Hello, world\n");
+
+  initUartCfg();
+  writeOnUart(7);
+  closeUart();
   return 0;
 }
