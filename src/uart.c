@@ -50,23 +50,14 @@ int writeOnUart(unsigned char *message, int messageSize){
     
 }
 
-// remove later
-// void print_bytes(const char *title, unsigned char *data, unsigned char length){
-
-//     unsigned char index = 0;
-//     printf("%s", title);
-//     for(; index < length-1; index++){
-//         printf("%02X ", data[index]);
-//     }
-//     printf("%02X\n", data[index]);
-// }
-
-void readFromUart(unsigned char* message, int messageSize){
-    usleep(100000);
+int readFromUart(unsigned char* message, int messageSize){
+    usleep(300000);
+    int rx_length = -1;
     if (uartFile != -1)
     {
         // Read up to 255 characters from the port if they are there
-        int rx_length = read(uartFile, (void*)message, messageSize);      //Filestream, buffer to store in, number of bytes to read (max)
+        rx_length = read(uartFile, (void*)message, messageSize);      //Filestream, buffer to store in, number of bytes to read (max)
+
         if (rx_length < 0)
         {
             printf("Erro na leitura.\n"); //An error occured (will occur if there are no bytes)
@@ -75,11 +66,13 @@ void readFromUart(unsigned char* message, int messageSize){
         {
             printf("Nenhum dado disponível.\n"); //No data waiting
         }
-        // else
-        // {
-        //    print_bytes('Bytes lidos ->', message, rx_length);
-        // }
-    }   
+        else
+        {   
+            printf("Dados Recebidos!\n");
+            message[messageSize] = '\0';
+        }
+    }
+    return rx_length;   
 }
 
 void closeUart(){

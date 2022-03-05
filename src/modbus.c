@@ -28,3 +28,31 @@ void writeWithModbus(){
 
   closeUart();
 }
+
+void read_with_modbus(){
+
+  short expected_crc, recieved_crc;
+  int response_length;
+  float temperature;
+  initUartCfg();
+
+  unsigned char response[256];
+
+  response_length = readFromUart(response, 10);
+
+  printf("tamanho da resposta: %d\n", response_length);
+
+  // testar crc
+
+  memcpy(&recieved_crc, &response[7], 2);
+  expected_crc = calcula_CRC(response, 7);  
+
+  if(recieved_crc != expected_crc){
+    printf("CRCs Diferem!\n");
+  }
+
+  memcpy(&temperature, &response[3], 4);
+  printf("temperatura recebida -> %f\n", temperature);
+  printf("Finalizei rotina de receber!\n");
+
+}
