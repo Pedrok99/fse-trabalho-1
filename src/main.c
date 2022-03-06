@@ -5,6 +5,7 @@
 #include "modbus.h"
 #include "lcd.h"
 #include "bme280.h"
+#include "pid.h"
 
 #define REQUEST_CODE 0x23
 #define SEND_CODE 0x16
@@ -46,6 +47,12 @@ int main(){
   int current_sys_state = 0;
   int tr_source = 0; // 1 = teclado, 2 = potenciomentro, 3 = curva de temperatura
 
+  // initial state of app
+  // resp 2
+  // pid_configura_constantes(30.0,  0.2, 400.0);
+    
+  // resp 3
+  pid_configura_constantes(20.0,  0.1, 100.0);
 
   printf("Escolha a origem da temperatura de referência (TR) :\n\n1-Teclado\n2-Potenciometro\n3-Curva de temperatura\n\n");
   scanf("%d", &tr_source);
@@ -68,6 +75,7 @@ int main(){
     break;
   
   default:
+    printf("\n\nEscolha invalida, finalizando...\n\n");
     break;
   }
   close_uart(uart_filestream);
@@ -143,6 +151,12 @@ int main(){
       break;
     }
 
+    // pid area 
+
+    pid_atualiza_referencia(reference_temp);
+    printf("SAIDA DO PID CTRL => %lf\n", pid_controle(internal_temp));
+
+    // ===================================
     close_uart(uart_filestream);
     sleep(1);
   }
