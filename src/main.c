@@ -86,8 +86,9 @@ int main(){
   printf("Escolha a origem da temperatura de referência (TR) :\n\n1-Teclado\n2-Potenciometro\n3-Curva de temperatura\n\n");
   scanf("%d", &tr_source);
   set_system_state(uart_filestream, ON);
+  set_reference_temperature_source(uart_filestream, FROM_TERMINAL);
   // send_uart_request(uart_filestream, SEND_CODE, SYSTEM_STATE_CODE, 1, 1, INTEGER_TYPE); // turn on sys
-  send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE); // turn off potentiometer
+  // send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE); // turn off potentiometer
 
   switch (tr_source)
   {

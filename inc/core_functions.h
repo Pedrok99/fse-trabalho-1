@@ -3,6 +3,9 @@
 
 #define ON 1
 #define OFF 0
+#define FROM_POTENTIOMETER 0
+#define FROM_TERMINAL 1
+
 #define REQUEST_CODE 0x23
 #define SEND_CODE 0x16
 #define INTERNAL_TEMP_CODE 0xC1
@@ -20,5 +23,6 @@
 #define FAN_PIN 5
 
 int set_system_state(int uart_filestream, int system_state);
+int set_reference_temperature_source(int uart_filestream, int reference_temperature_source);
 
 #endif
