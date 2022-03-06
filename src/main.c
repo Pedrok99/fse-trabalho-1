@@ -48,7 +48,7 @@ int main(){
 
     // get internal temp =========================================
     printf("Lendo temperatura interna\n");
-    send_uart_request(uart_filestream, REQUEST_CODE, INTERNAL_TEMP_CODE, NO_DATA_FLAG);
+    send_uart_request(uart_filestream, REQUEST_CODE, INTERNAL_TEMP_CODE, NO_DATA_FLAG, 0);
     do{
       internal_temp = read_uart_response(uart_filestream, FLOAT_TYPE);
       read_attempts++;
@@ -59,7 +59,7 @@ int main(){
 
     // get temp from potentiometer =========================================
     printf("Lendo temperatura de referencia\n");
-    send_uart_request(uart_filestream, REQUEST_CODE, POTENTIOMETER_TEMP_CODE, NO_DATA_FLAG);
+    send_uart_request(uart_filestream, REQUEST_CODE, POTENTIOMETER_TEMP_CODE, NO_DATA_FLAG, 0);
     do{
       reference_temp = read_uart_response(uart_filestream, FLOAT_TYPE);
       read_attempts++;
@@ -67,7 +67,7 @@ int main(){
     read_attempts = 0;
     show_temp_and_mode_on_lcd("TERM  ", internal_temp, reference_temp, 0.0);
     printf("Lendo comandos do usuario\n");
-    send_uart_request(uart_filestream, REQUEST_CODE, USER_ACTION_CODE, -1);
+    send_uart_request(uart_filestream, REQUEST_CODE, USER_ACTION_CODE, NO_DATA_FLAG, 0);
     do{
       printf("tentando ler\n");
       user_action = (int)read_uart_response(uart_filestream, 'i');
@@ -80,11 +80,11 @@ int main(){
     {
     case 1:
       printf("Ligando sistema...\n\n");
-      send_uart_request_w_byte(uart_filestream, SEND_CODE, SYSTEM_STATE_CODE, 0x01);
+      send_uart_request(uart_filestream, SEND_CODE, SYSTEM_STATE_CODE, 1, 1);
       break;
     case 2:
       printf("Desligando sistema...\n\n");
-      send_uart_request_w_byte(uart_filestream, SEND_CODE, SYSTEM_STATE_CODE, 0x00);
+      send_uart_request(uart_filestream, SEND_CODE, SYSTEM_STATE_CODE, 0, 1);
       break;
     
     default:
