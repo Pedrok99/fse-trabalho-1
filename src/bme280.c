@@ -162,7 +162,7 @@ int64_t var1_64, var2_64;
 	var2 = (((((t >> 4) - (calT1)) * ((t>>4) - (calT1))) >> 12) * (calT3)) >> 14;
 	t_fine = var1 + var2;
 	*T = (t_fine * 5 + 128) >> 8;
-	*T -= 150;
+	*T -= 148;
 	// Calculate calibrated pressure value
 	var1_64 = t_fine - 128000;
 	var2_64 = var1_64 * var1_64 * (int64_t)calP6;
