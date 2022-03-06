@@ -4,9 +4,9 @@
 #include "uart.h"
 #include <string.h>
 
-void send_uart_request(int uart_filestream, unsigned char code, unsigned char sub_code, int message_data, int message_data_size){
+void send_uart_request(int uart_filestream, unsigned char code, unsigned char sub_code, float message_data, int message_data_size, char data_type){
   int message_size  = 7;
-
+  int i_message_data = 0;
   unsigned char message[200];
   unsigned char *msg_ptr = message;
 
@@ -20,7 +20,12 @@ void send_uart_request(int uart_filestream, unsigned char code, unsigned char su
 
   if (message_data != -1)
   {
-    memcpy(&message[message_size], &message_data, message_data_size);
+    if(data_type=='i'){
+      i_message_data = (int)message_data;
+      memcpy(&message[message_size], &i_message_data, message_data_size);
+    }else{
+      memcpy(&message[message_size], &message_data, message_data_size);
+    }
     message_size+=message_data_size;
   }
 

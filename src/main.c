@@ -4,6 +4,7 @@
 #include "uart.h"
 #include "modbus.h"
 #include "lcd.h"
+#include "bme280.h"
 
 #define REQUEST_CODE 0x23
 #define SEND_CODE 0x16
@@ -12,6 +13,7 @@
 #define USER_ACTION_CODE 0xC3
 #define SYSTEM_STATE_CODE 0xD3
 #define TR_SOURCE_CODE 0xD4
+#define TR_CMD_SOURCE 0xD2
 #define MAX_READ_ATTEMPTS 5
 #define NO_DATA_FLAG -1
 #define INTEGER_TYPE 'i'
@@ -37,11 +39,39 @@ void show_temp_and_mode_on_lcd(char *mode, float internal_temp, float reference_
 int main(){
   int uart_filestream;
   int read_attempts = 0;
-  // temps
   float internal_temp = 0;
   float reference_temp = 0;
+  float external_temp = 0;
   int user_action = -1;
   int current_sys_state = 0;
+  int tr_source = 0; // 1 = teclado, 2 = potenciomentro, 3 = curva de temperatura
+
+
+  printf("Escolha a origem da temperatura de referência (TR) :\n\n1-Teclado\n2-Potenciometro\n3-Curva de temperatura\n\n");
+  scanf("%d", &tr_source);
+  uart_filestream = init_uart();
+  send_uart_request(uart_filestream, SEND_CODE, SYSTEM_STATE_CODE, 1, 1, INTEGER_TYPE); // turn on sys
+  send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE); // turn of potentiometer
+
+  switch (tr_source)
+  {
+  case 1:
+    printf("Digite a temperatura desejada:\n");
+    scanf("%f", &reference_temp);
+    send_uart_request(uart_filestream, SEND_CODE, TR_CMD_SOURCE, reference_temp, 4, FLOAT_TYPE);
+    break;
+  case 2:
+    send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 0, 1, INTEGER_TYPE);  
+    break;
+  case 3:
+    send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);  
+    break;
+  
+  default:
+    break;
+  }
+  close_uart(uart_filestream);
+
   while (1)
   {
 
@@ -49,7 +79,7 @@ int main(){
 
     // get internal temp =========================================
     printf("Lendo temperatura interna\n");
-    send_uart_request(uart_filestream, REQUEST_CODE, INTERNAL_TEMP_CODE, NO_DATA_FLAG, 0);
+    send_uart_request(uart_filestream, REQUEST_CODE, INTERNAL_TEMP_CODE, NO_DATA_FLAG, 0, FLOAT_TYPE);
     do{
       internal_temp = read_uart_response(uart_filestream, FLOAT_TYPE);
       read_attempts++;
@@ -58,42 +88,55 @@ int main(){
 
 
 
-    // get temp from potentiometer =========================================
-    printf("Lendo temperatura de referencia\n");
-    send_uart_request(uart_filestream, REQUEST_CODE, POTENTIOMETER_TEMP_CODE, NO_DATA_FLAG, 0);
-    do{
-      reference_temp = read_uart_response(uart_filestream, FLOAT_TYPE);
-      read_attempts++;
-    }while (reference_temp == -1.0 && read_attempts>=MAX_READ_ATTEMPTS);
-    read_attempts = 0;
-    show_temp_and_mode_on_lcd("TERM  ", internal_temp, reference_temp, 0.0);
-    printf("Lendo comandos do usuario\n");
-    send_uart_request(uart_filestream, REQUEST_CODE, USER_ACTION_CODE, NO_DATA_FLAG, 0);
+    // get TR=========================================
+    if(tr_source == 1){
+      send_uart_request(uart_filestream, SEND_CODE, TR_CMD_SOURCE, reference_temp, 4, FLOAT_TYPE);
+    }else if(tr_source == 2){
+      send_uart_request(uart_filestream, REQUEST_CODE, POTENTIOMETER_TEMP_CODE, NO_DATA_FLAG, 0, FLOAT_TYPE);
+      do{
+        reference_temp = read_uart_response(uart_filestream, FLOAT_TYPE);
+        read_attempts++;
+      }while (reference_temp == -1.0 && read_attempts>=MAX_READ_ATTEMPTS);
+      read_attempts = 0;
+    }else{
+      // implement later reflow
+      send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);
+    }
+
+    if(tr_source == 1 || tr_source == 3){
+      read_bme_temperature(&external_temp);
+      show_temp_and_mode_on_lcd("CMD  ", internal_temp, reference_temp, external_temp);
+    }else{
+      show_temp_and_mode_on_lcd("UART  ", internal_temp, reference_temp, 0.0);
+    }
+    // get user command 
+    send_uart_request(uart_filestream, REQUEST_CODE, USER_ACTION_CODE, NO_DATA_FLAG, 0, FLOAT_TYPE);
     do{
       printf("tentando ler\n");
       user_action = (int)read_uart_response(uart_filestream, 'i');
       read_attempts++;
     }while (user_action == -1 && read_attempts <= MAX_READ_ATTEMPTS);
     read_attempts = 0;
-    printf("AÇÃO USUARIO -> \n\n%d\n\n", user_action);
 
     switch (user_action)
     {
     case 1:
       printf("Ligando sistema...\n\n");
-      send_uart_request(uart_filestream, SEND_CODE, SYSTEM_STATE_CODE, 1, 1);
+      send_uart_request(uart_filestream, SEND_CODE, SYSTEM_STATE_CODE, 1, 1, INTEGER_TYPE);
       break;
     case 2:
       printf("Desligando sistema...\n\n");
-      send_uart_request(uart_filestream, SEND_CODE, SYSTEM_STATE_CODE, 0, 1);
+      send_uart_request(uart_filestream, SEND_CODE, SYSTEM_STATE_CODE, 0, 1, INTEGER_TYPE);
       break;
     case 3:
       printf("Controle via potenciometro...\n\n");
-      send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 0, 1);
+      tr_source = 2;
+      send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 0, 1, INTEGER_TYPE);
       break;
     case 4:
       printf("Controle via curva...\n\n");
-      send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1);
+      tr_source = 3;
+      send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);
       break;
     
     default:
