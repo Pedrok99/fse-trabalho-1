@@ -14,5 +14,6 @@ void lcdLoc(int line); //move cursor
 void ClrLcd(void); // clr LCD return home
 void typeln(const char *s);
 void typeChar(char val);
+void show_temp_and_mode_on_lcd(char *mode, float internal_temp, float reference_temp, float external_temp);
 
 #endif

@@ -17,6 +17,7 @@
 #include <wiringPi.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "lcd.h"
 
 // Define some device parameters
 #define I2C_ADDR   0x27 // I2C device address
@@ -183,3 +184,19 @@ void lcd_init()   {
   delayMicroseconds(500);
 }
 
+void show_temp_and_mode_on_lcd(char *mode, float internal_temp, float reference_temp, float external_temp){
+  lcd_init();
+  ClrLcd();
+  // linha 1
+  lcdLoc(LINE1);
+  typeln(mode);
+  typeln("TE:");
+  typeFloat(external_temp);
+
+  // linha 1
+  lcdLoc(LINE2);
+  typeln("TI:");
+  typeFloat(internal_temp);
+  typeln(" TR:");
+  typeFloat(reference_temp);
+}

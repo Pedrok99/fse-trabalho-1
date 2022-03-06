@@ -30,22 +30,22 @@
 // GLOBAL VARS
 int uart_filestream;
 // ==================================
-void show_temp_and_mode_on_lcd(char *mode, float internal_temp, float reference_temp, float external_temp){
-  lcd_init();
-  ClrLcd();
-  // linha 1
-  lcdLoc(LINE1);
-  typeln(mode);
-  typeln("TE:");
-  typeFloat(external_temp);
+// void show_temp_and_mode_on_lcd(char *mode, float internal_temp, float reference_temp, float external_temp){
+//   lcd_init();
+//   ClrLcd();
+//   // linha 1
+//   lcdLoc(LINE1);
+//   typeln(mode);
+//   typeln("TE:");
+//   typeFloat(external_temp);
 
-  // linha 1
-  lcdLoc(LINE2);
-  typeln("TI:");
-  typeFloat(internal_temp);
-  typeln(" TR:");
-  typeFloat(reference_temp);
-}
+//   // linha 1
+//   lcdLoc(LINE2);
+//   typeln("TI:");
+//   typeFloat(internal_temp);
+//   typeln(" TR:");
+//   typeFloat(reference_temp);
+// }
 
 void finish_app(int value){
   uart_filestream = init_uart();
