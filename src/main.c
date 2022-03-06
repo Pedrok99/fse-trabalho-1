@@ -9,6 +9,7 @@
 #include "bme280.h"
 #include "pid.h"
 #include "pwm.h"
+#include "csv.h"
 
 #define REQUEST_CODE 0x23
 #define SEND_CODE 0x16
@@ -35,7 +36,7 @@ void show_temp_and_mode_on_lcd(char *mode, float internal_temp, float reference_
   // linha 1
   lcdLoc(LINE1);
   typeln(mode);
-  typeln("TE: ");
+  typeln("TE:");
   typeFloat(external_temp);
 
   // linha 1
@@ -45,6 +46,7 @@ void show_temp_and_mode_on_lcd(char *mode, float internal_temp, float reference_
   typeln(" TR:");
   typeFloat(reference_temp);
 }
+
 void finish_app(int value){
   uart_filestream = init_uart();
   printf("Desligando sistema...\n\n");
@@ -56,19 +58,21 @@ void finish_app(int value){
   close_uart(uart_filestream);
   exit(0);
 }
+
 int main(){
   int read_attempts = 0;
   float internal_temp = 0;
   float reference_temp = 0;
   float external_temp = 0;
   int user_action = -1;
-  int current_sys_state = 0;
+  int current_fan_value, current_resistor_value;
   int tr_source = 0; // 1 = teclado, 2 = potenciomentro, 3 = curva de temperatura
   double pid_computed_value = 0;
+  int reflow_times[10], reflow_temps[10], reflow_timer_count = 0, current_reflow_pos = -1;
   uart_filestream = init_uart();
 
   signal(SIGINT, finish_app);
-
+  init_csv_file();
   // initial state of app
   // resp 2
   pid_configura_constantes(30.0,  0.2, 400.0);
@@ -93,6 +97,7 @@ int main(){
     break;
   case 3:
     send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);  
+    read_reflow_csv(reflow_times, reflow_temps, 10);
     break;
   
   default:
@@ -129,15 +134,22 @@ int main(){
       read_attempts = 0;
     }else{
       // implement later reflow
-      send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);
+      reflow_timer_count++;
+      if(current_reflow_pos != (int)(reflow_timer_count/60.0)){
+        current_reflow_pos = (int)(reflow_timer_count/60.0);
+        reference_temp = reflow_temps[current_reflow_pos];
+        send_uart_request(uart_filestream, SEND_CODE, TR_CMD_SOURCE, reference_temp, 4, FLOAT_TYPE);
+      }
+      // send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);
+      printf("Reflow timer -> %d\n", reflow_timer_count);
     }
 
     if(tr_source == 1 || tr_source == 3){
       read_bme_temperature(&external_temp);
-      show_temp_and_mode_on_lcd("CMD  ", internal_temp, reference_temp, external_temp);
+      show_temp_and_mode_on_lcd("TERMINAL ", internal_temp, reference_temp, external_temp);
     }else{
       read_bme_temperature(&external_temp);
-      show_temp_and_mode_on_lcd("UART  ", internal_temp, reference_temp, 0.0);
+      show_temp_and_mode_on_lcd("UART  ", internal_temp, reference_temp, external_temp);
     }
     // get user command 
     send_uart_request(uart_filestream, REQUEST_CODE, USER_ACTION_CODE, NO_DATA_FLAG, 0, FLOAT_TYPE);
@@ -165,6 +177,7 @@ int main(){
       printf("Controle via curva...\n\n");
       tr_source = 3;
       send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);
+      read_reflow_csv(reflow_times, reflow_temps, 10);
       break;
     
     default:
@@ -180,22 +193,30 @@ int main(){
     if(pid_computed_value > 0){
       printf("Esquentando\n\n");
       update_pin_value(RESISTOR_PIN, (int)pid_computed_value);
+      current_resistor_value = (int)pid_computed_value;
       update_pin_value(FAN_PIN, 0);
-      // send_uart_request(uart_filestream, SEND_CODE, CONTROL_SIGNAL_CODE, (int)pid_computed_value, 4, INTEGER_TYPE);  
+      current_fan_value = 0;
     }else{
       printf("Resfriando\n\n");
       if(pid_computed_value < -40){
         update_pin_value(FAN_PIN, (int)(-1.0*pid_computed_value));
+        current_fan_value = (int)(-1.0*pid_computed_value);
       }else{
         update_pin_value(FAN_PIN, 40);
+        current_fan_value = 40;
       }
       update_pin_value(RESISTOR_PIN, 0);
-      // send_uart_request(uart_filestream, SEND_CODE, CONTROL_SIGNAL_CODE, (int)pid_computed_value, 4, INTEGER_TYPE);  
+      current_resistor_value = 0;
+
     }
     send_uart_request(uart_filestream, SEND_CODE, CONTROL_SIGNAL_CODE, (int)pid_computed_value, 4, INTEGER_TYPE);  
 
 
     // ===================================
+
+    // save log on csv ==================
+    write_on_csv(internal_temp,reference_temp,external_temp,reference_temp, current_fan_value, current_resistor_value);
+
     close_uart(uart_filestream);
     sleep(1);
   }
