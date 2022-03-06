@@ -35,7 +35,6 @@ int write_on_uart(int uart_filestream, unsigned char *message, int messageSize){
     
     if (uart_filestream != -1)
     {
-        printf("Enviando dados para a uart\n");
         int count = write(uart_filestream, message, messageSize);
         if (count < 0)
         {
@@ -44,7 +43,7 @@ int write_on_uart(int uart_filestream, unsigned char *message, int messageSize){
         }
         else
         {
-            printf("escrito.\n");
+            printf("Requisição enviada!\n\n");
         }
     }
     return 0;

@@ -11,6 +11,7 @@
 #define POTENTIOMETER_TEMP_CODE 0xC2
 #define USER_ACTION_CODE 0xC3
 #define SYSTEM_STATE_CODE 0xD3
+#define TR_SOURCE_CODE 0xD4
 #define MAX_READ_ATTEMPTS 5
 #define NO_DATA_FLAG -1
 #define INTEGER_TYPE 'i'
@@ -85,6 +86,14 @@ int main(){
     case 2:
       printf("Desligando sistema...\n\n");
       send_uart_request(uart_filestream, SEND_CODE, SYSTEM_STATE_CODE, 0, 1);
+      break;
+    case 3:
+      printf("Controle via potenciometro...\n\n");
+      send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 0, 1);
+      break;
+    case 4:
+      printf("Controle via curva...\n\n");
+      send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1);
       break;
     
     default:
