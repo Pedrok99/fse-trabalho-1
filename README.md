@@ -47,12 +47,13 @@ Para compilar, na página do repositório, utilize o seguinte comando:
 ### 1. Selecione um dos modos:
  
 * __Terminal__
- * Solicita uma temperatura de referência e a mantém até a finalização da aplicação ou uma mudança de modo via comandos de usuários.
+  * Solicita uma temperatura de referência e a mantém até a finalização da aplicação ou uma mudança de modo via comandos de usuários.
  
 * __Potênciometro__
- * A temperatura de referência será guiada pelo potenciômetro acoplado ao sistema.
+  * A temperatura de referência será guiada pelo potenciômetro acoplado ao sistema.
+
 * __Curva de temperatura (Reflow)__
- * A temperatura de referência será guiada pelo [arquivo csv](curva_reflow.csv) na raiz do projeto.
+  * A temperatura de referência será guiada pelo [arquivo csv](curva_reflow.csv) na raiz do projeto.
  
 ### 2. Defina os valores para o cálculo do PID:
 * Kp
