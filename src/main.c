@@ -28,7 +28,7 @@ void finish_app(int value){
 }
 
 int main(){
-  int read_attempts = 0;
+  // int read_attempts = 0;
   float internal_temp = 0;
   float reference_temp = 0;
   float external_temp = 0;
@@ -49,7 +49,7 @@ int main(){
   printf("Escolha a origem da temperatura de referência (TR) :\n\n1-Teclado\n2-Potenciometro\n3-Curva de temperatura\n\n");
   scanf("%d", &ref_temperature_source);
   set_system_state(uart_filestream, ON);
-  set_reference_temperature_source(uart_filestream, FROM_TERMINAL);
+  // set_reference_temperature_source(uart_filestream, FROM_TERMINAL);
 
   switch (ref_temperature_source)
   {
@@ -74,44 +74,45 @@ int main(){
 
   while (1)
   {
-
     uart_filestream = init_uart();
-
-    // get internal temp =========================================
-    printf("Lendo temperatura interna\n");
-    // send_uart_request(uart_filestream, REQUEST_CODE, INTERNAL_TEMP_CODE, NO_DATA_FLAG, 0, FLOAT_TYPE);
-    // do{
-    //   internal_temp = read_uart_response(uart_filestream, FLOAT_TYPE);
-    //   read_attempts++;
-    // }while (internal_temp == -1.0 && read_attempts>= MAX_READ_ATTEMPTS);
-    // read_attempts = 0;
-
     internal_temp = get_internal_temperature(uart_filestream);
 
-
-
-    // get TR=========================================
-    if(ref_temperature_source == 1){
-      // send_uart_request(uart_filestream, SEND_CODE, SET_RT_CODE, reference_temp, 4, FLOAT_TYPE);
+    // get TR
+    switch (ref_temperature_source)
+    {
+    case 1:
       set_reference_temperature(uart_filestream, reference_temp);
-    }else if(ref_temperature_source == 2){
-      send_uart_request(uart_filestream, REQUEST_CODE, POTENTIOMETER_TEMP_CODE, NO_DATA_FLAG, 0, FLOAT_TYPE);
-      do{
-        reference_temp = read_uart_response(uart_filestream, FLOAT_TYPE);
-        read_attempts++;
-      }while (reference_temp == -1.0 && read_attempts>=MAX_READ_ATTEMPTS);
-      read_attempts = 0;
-    }else{
-      // implement later reflow
+      break;
+
+    case 2:
+      reference_temp = get_reference_temperature(uart_filestream);
+      break;
+    
+    default: // reflow
       reflow_timer_count++;
       if(current_reflow_pos != (int)(reflow_timer_count/60.0)){
         current_reflow_pos = (int)(reflow_timer_count/60.0);
         reference_temp = reflow_temps[current_reflow_pos];
-        send_uart_request(uart_filestream, SEND_CODE, SET_RT_CODE, reference_temp, 4, FLOAT_TYPE);
+        set_reference_temperature(uart_filestream, reference_temp);
       }
-      // send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);
       printf("Reflow timer -> %d\n", reflow_timer_count);
+      break;
     }
+    // if(ref_temperature_source == 1){
+    //   set_reference_temperature(uart_filestream, reference_temp);
+    // }else if(ref_temperature_source == 2){
+    //   reference_temp = get_reference_temperature(uart_filestream);
+    // }else{
+    //   // implement later reflow
+    //   reflow_timer_count++;
+    //   if(current_reflow_pos != (int)(reflow_timer_count/60.0)){
+    //     current_reflow_pos = (int)(reflow_timer_count/60.0);
+    //     reference_temp = reflow_temps[current_reflow_pos];
+    //     send_uart_request(uart_filestream, SEND_CODE, SET_RT_CODE, reference_temp, 4, FLOAT_TYPE);
+    //   }
+    //   // send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);
+    //   printf("Reflow timer -> %d\n", reflow_timer_count);
+    // }
 
     if(ref_temperature_source == 1 || ref_temperature_source == 3){
       read_bme_temperature(&external_temp);
@@ -120,13 +121,8 @@ int main(){
       read_bme_temperature(&external_temp);
       show_temp_and_mode_on_lcd("UART  ", internal_temp, reference_temp, external_temp);
     }
-    // get user command 
-    send_uart_request(uart_filestream, REQUEST_CODE, USER_ACTION_CODE, NO_DATA_FLAG, 0, FLOAT_TYPE);
-    do{
-      user_action = (int)read_uart_response(uart_filestream, 'i');
-      read_attempts++;
-    }while (user_action == -1 && read_attempts <= MAX_READ_ATTEMPTS);
-    read_attempts = 0;
+
+    user_action = get_user_command(uart_filestream);
 
     switch (user_action)
     {
@@ -180,13 +176,10 @@ int main(){
     }
     send_uart_request(uart_filestream, SEND_CODE, CONTROL_SIGNAL_CODE, (int)pid_computed_value, 4, INTEGER_TYPE);  
 
-
-    // ===================================
-
-    // save log on csv ==================
     write_on_csv(internal_temp,reference_temp,external_temp,reference_temp, current_fan_value, current_resistor_value);
 
     close_uart(uart_filestream);
+
     sleep(1);
   }
 

@@ -42,6 +42,27 @@ float get_internal_temperature(int uart_filestream){
     temperature = read_uart_response(uart_filestream, FLOAT_TYPE);
     read_attempts++;
   }while (temperature == -1.0 && read_attempts>= MAX_READ_ATTEMPTS);
-  read_attempts = 0;
   return temperature;
+}
+
+float get_reference_temperature(int uart_filestream){ // gets from potentiometer
+  float temperature = 0.0;
+  int read_attempts = 0;
+  send_uart_request(uart_filestream, REQUEST_CODE, POTENTIOMETER_TEMP_CODE, NO_DATA_FLAG, 0, FLOAT_TYPE);
+    do{
+      temperature = read_uart_response(uart_filestream, FLOAT_TYPE);
+      read_attempts++;
+    }while (temperature == -1.0 && read_attempts>=MAX_READ_ATTEMPTS);
+  return temperature;
+}
+
+int get_user_command(int uart_filestream){
+  int command = -1;
+  int read_attempts = 0;
+    send_uart_request(uart_filestream, REQUEST_CODE, USER_ACTION_CODE, NO_DATA_FLAG, 0, FLOAT_TYPE);
+    do{
+      command = (int)read_uart_response(uart_filestream, 'i');
+      read_attempts++;
+    }while (command == -1 && read_attempts <= MAX_READ_ATTEMPTS);
+  return command;
 }
