@@ -54,10 +54,10 @@ float read_uart_response(int uart_filestream, char expected_data_type){
   expected_crc = calcula_CRC(response, 7);  
 
   if(recieved_crc != expected_crc){
-    printf("CRCs Diferem!\n");
+    // printf("CRCs Diferem!\n");
     f_result = -1.0;
   }else if(response_length != 9){
-    printf("Tamanho da mensagem incorreto!\n");
+    // printf("Tamanho da mensagem incorreto!\n");
     f_result = -1.0;
   }else{
     if(expected_data_type == 'i'){

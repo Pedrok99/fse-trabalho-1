@@ -16,7 +16,7 @@ int init_uart(){
     }
     else
     {
-        printf("UART inicializada!\n");
+        // printf("UART inicializada!\n");
     }    
     struct termios options;
     tcgetattr(uart_filestream, &options);
@@ -41,10 +41,10 @@ int write_on_uart(int uart_filestream, unsigned char *message, int messageSize){
             printf("UART TX error\n");
             return -1;
         }
-        else
-        {
-            printf("Requisição enviada!\n\n");
-        }
+        // else
+        // {
+        //     printf("Requisição enviada!\n\n");
+        // }
     }
     return 0;
     
@@ -60,15 +60,15 @@ int read_from_uart(int uart_filestream, unsigned char* message, int messageSize)
 
         if (rx_length < 0)
         {
-            printf("Erro na leitura.\n"); //An error occured (will occur if there are no bytes)
+            // printf("Erro na leitura.\n"); //An error occured (will occur if there are no bytes)
         }
         else if (rx_length == 0)
         {
-            printf("Nenhum dado disponível.\n"); //No data waiting
+            // printf("Nenhum dado disponível.\n"); //No data waiting
         }
         else
         {   
-            printf("Dados Recebidos!\n");
+            // printf("Dados Recebidos!\n");
             message[messageSize] = '\0';
         }
     }

@@ -24,7 +24,7 @@ void write_on_csv(float ti, float tr, float te, float ut, int fan_value, int res
   csv_pointer = fopen("logs.csv", "a");
 
   fprintf(csv_pointer, "%d-%02d-%02d %02d:%02d:%02d, ", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-  fprintf(csv_pointer, "%f, %f, %f, %f, %d, %d\n", ti, tr, te, ut, fan_value, resistor_value);
+  fprintf(csv_pointer, "%.2f, %.2f, %.2f, %.2f, %d, %d\n", ti, tr, te, ut, fan_value, resistor_value);
   fclose(csv_pointer);
 }
 
