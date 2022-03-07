@@ -12,11 +12,11 @@ void init_csv_file(){
   if(ftell(csv_pointer) != 0){
     return;
   }
-  fprintf(csv_pointer,"Date-Time, Internal Temperature, Reference Temperature, External temperature, User Temperature, FAN, RESISTOR\n");
+  fprintf(csv_pointer,"Date-Time, Internal Temperature, Reference Temperature, External temperature, User Temperature, FAN, RESISTOR, PID\n");
   fclose(csv_pointer);
 }
 
-void write_on_csv(float ti, float tr, float te, float ut, int fan_value, int resistor_value){
+void write_on_csv(float ti, float tr, float te, float ut, int fan_value, int resistor_value, float control_signal){
   time_t t = time(NULL);
   struct tm tm = *localtime(&t);
 
@@ -24,7 +24,7 @@ void write_on_csv(float ti, float tr, float te, float ut, int fan_value, int res
   csv_pointer = fopen("logs.csv", "a");
 
   fprintf(csv_pointer, "%d-%02d-%02d %02d:%02d:%02d, ", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-  fprintf(csv_pointer, "%.2f, %.2f, %.2f, %.2f, %d, %d\n", ti, tr, te, ut, fan_value, resistor_value);
+  fprintf(csv_pointer, "%.2f, %.2f, %.2f, %.2f, %d, %d, %.2f\n", ti, tr, te, ut, fan_value, resistor_value, control_signal);
   fclose(csv_pointer);
 }
 

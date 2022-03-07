@@ -59,8 +59,8 @@ int main(){
   int ref_temperature_source = 0; // 1 = teclado, 2 = potenciomentro, 3 = curva de temperatura
   double pid_computed_value = 0;
   int rasp_number = 0;
-  int reflow_times[10], reflow_temps[10], reflow_timer_count = 0, current_reflow_pos = -1;
-  
+  int reflow_times[10], reflow_temps[10], /*reflow_timer_count = 0,*/ current_reflow_pos = -1;
+  float reflow_timer_count = 0.0;
   // ===================================================main================================================================
 
   uart_filestream = init_uart();
@@ -91,7 +91,7 @@ int main(){
     break;
   }
  
-  printf("\n\n Escolha a resp a ser usada:\n\n1-rasp42 (Kp = 30.0 , Ki = 0.2, Kd = 400.0)\n2-rasp43 (Kp = 20.0, Ki = 0.1, Kd = 100.0\n\n");
+  printf("\n\n Escolha a resp a ser usada:\n\n1-rasp42 (Kp = 30.0 , Ki = 0.2, Kd = 400.0)\n2-rasp43 (Kp = 20.0, Ki = 0.1, Kd = 100.0)\n\n");
   scanf("%d", &rasp_number);
 
   if(rasp_number == 1){
@@ -125,14 +125,17 @@ int main(){
       break;
     
     default: // reflow
-      reflow_timer_count++;
-      reflow_timer_count = reflow_timer_count%600;
-      if(current_reflow_pos != (int)(reflow_timer_count/60.0)){
-        current_reflow_pos = (int)(reflow_timer_count/60.0);
+      reflow_timer_count+=1.3;
+      // reflow_timer_count+=10;
+      reflow_timer_count = (int)reflow_timer_count%600;
+      
+      printf("Posição no vetor ===> %d\n", (int)(reflow_timer_count/60));
+      if(current_reflow_pos != (int)(reflow_timer_count/60)){
+        current_reflow_pos = (int)(reflow_timer_count/60);
         reference_temp = reflow_temps[current_reflow_pos];
         set_reference_temperature(uart_filestream, reference_temp);
       }
-      printf("Reflow timer -> %d\n", reflow_timer_count);
+      printf("Reflow timer -> %f\n", reflow_timer_count);
       break;
     }
 
@@ -140,6 +143,7 @@ int main(){
     external_temp == -1.0 ? (external_temp = last_external_temp) : (last_external_temp = external_temp);
 
     write_lcd_with_mode(ref_temperature_source, internal_temp, reference_temp, external_temp);
+    printf("Pegando comando do usuario\n");
 
     user_action = get_user_command(uart_filestream);
 
@@ -169,7 +173,7 @@ int main(){
     }
 
     // pid calc 
-
+    printf("Calculando PID\n");
     pid_atualiza_referencia(reference_temp);
     pid_computed_value = pid_controle(internal_temp);
     if(pid_computed_value > 0){
@@ -191,7 +195,7 @@ int main(){
     }
     send_uart_request(uart_filestream, SEND_CODE, CONTROL_SIGNAL_CODE, (int)pid_computed_value, 4, INTEGER_TYPE);  
 
-    write_on_csv(internal_temp,reference_temp,external_temp,reference_temp, current_fan_value, current_resistor_value);
+    write_on_csv(internal_temp,reference_temp,external_temp,reference_temp, current_fan_value, current_resistor_value, pid_computed_value);
     // debug
     printf("Modo atual: %d | TI: %.2f | TR: %.2f | TE: %.2f | PID: %.2f\n\n", ref_temperature_source, internal_temp, reference_temp, external_temp, pid_computed_value); // debug
 
