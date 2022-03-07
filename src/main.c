@@ -12,43 +12,8 @@
 #include "csv.h"
 #include "core_functions.h"
 
-// #define ON 1
-// #define OFF 0
-// #define REQUEST_CODE 0x23
-// #define SEND_CODE 0x16
-// #define INTERNAL_TEMP_CODE 0xC1
-// #define POTENTIOMETER_TEMP_CODE 0xC2
-// #define USER_ACTION_CODE 0xC3
-// #define CONTROL_SIGNAL_CODE 0xD1
-// #define TR_CMD_SOURCE 0xD2
-// #define SYSTEM_STATE_CODE 0xD3
-// #define TR_SOURCE_CODE 0xD4
-// #define MAX_READ_ATTEMPTS 5
-// #define NO_DATA_FLAG -1
-// #define INTEGER_TYPE 'i'
-// #define FLOAT_TYPE 'f'
-// #define RESISTOR_PIN 4
-// #define FAN_PIN 5
-
 // GLOBAL VARS
 int uart_filestream;
-// ==================================
-// void show_temp_and_mode_on_lcd(char *mode, float internal_temp, float reference_temp, float external_temp){
-//   lcd_init();
-//   ClrLcd();
-//   // linha 1
-//   lcdLoc(LINE1);
-//   typeln(mode);
-//   typeln("TE:");
-//   typeFloat(external_temp);
-
-//   // linha 1
-//   lcdLoc(LINE2);
-//   typeln("TI:");
-//   typeFloat(internal_temp);
-//   typeln(" TR:");
-//   typeFloat(reference_temp);
-// }
 
 void finish_app(int value){
   uart_filestream = init_uart();
@@ -69,7 +34,7 @@ int main(){
   float external_temp = 0;
   int user_action = -1;
   int current_fan_value, current_resistor_value;
-  int tr_source = 0; // 1 = teclado, 2 = potenciomentro, 3 = curva de temperatura
+  int ref_temperature_source = 0; // 1 = teclado, 2 = potenciomentro, 3 = curva de temperatura
   double pid_computed_value = 0;
   int reflow_times[10], reflow_temps[10], reflow_timer_count = 0, current_reflow_pos = -1;
   uart_filestream = init_uart();
@@ -77,28 +42,24 @@ int main(){
   signal(SIGINT, finish_app);
   init_csv_file();
   // initial state of app
-  // resp 2
-  pid_configura_constantes(30.0,  0.2, 400.0);
-    
-  // resp 3
-  // pid_configura_constantes(20.0,  0.1, 100.0);
+  
+  pid_configura_constantes(30.0,  0.2, 400.0); // resp 2
+  // pid_configura_constantes(20.0,  0.1, 100.0); // resp 3
 
   printf("Escolha a origem da temperatura de referência (TR) :\n\n1-Teclado\n2-Potenciometro\n3-Curva de temperatura\n\n");
-  scanf("%d", &tr_source);
+  scanf("%d", &ref_temperature_source);
   set_system_state(uart_filestream, ON);
   set_reference_temperature_source(uart_filestream, FROM_TERMINAL);
-  // send_uart_request(uart_filestream, SEND_CODE, SYSTEM_STATE_CODE, 1, 1, INTEGER_TYPE); // turn on sys
-  // send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE); // turn off potentiometer
 
-  switch (tr_source)
+  switch (ref_temperature_source)
   {
   case 1:
     printf("Digite a temperatura desejada:\n");
     scanf("%f", &reference_temp);
-    send_uart_request(uart_filestream, SEND_CODE, TR_CMD_SOURCE, reference_temp, 4, FLOAT_TYPE);
+    set_reference_temperature(uart_filestream, reference_temp);
     break;
   case 2:
-    send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 0, 1, INTEGER_TYPE);  
+    set_reference_temperature_source(uart_filestream, FROM_POTENTIOMETER);
     break;
   case 3:
     send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);  
@@ -128,9 +89,9 @@ int main(){
 
 
     // get TR=========================================
-    if(tr_source == 1){
-      send_uart_request(uart_filestream, SEND_CODE, TR_CMD_SOURCE, reference_temp, 4, FLOAT_TYPE);
-    }else if(tr_source == 2){
+    if(ref_temperature_source == 1){
+      send_uart_request(uart_filestream, SEND_CODE, SET_RT_CODE, reference_temp, 4, FLOAT_TYPE);
+    }else if(ref_temperature_source == 2){
       send_uart_request(uart_filestream, REQUEST_CODE, POTENTIOMETER_TEMP_CODE, NO_DATA_FLAG, 0, FLOAT_TYPE);
       do{
         reference_temp = read_uart_response(uart_filestream, FLOAT_TYPE);
@@ -143,13 +104,13 @@ int main(){
       if(current_reflow_pos != (int)(reflow_timer_count/60.0)){
         current_reflow_pos = (int)(reflow_timer_count/60.0);
         reference_temp = reflow_temps[current_reflow_pos];
-        send_uart_request(uart_filestream, SEND_CODE, TR_CMD_SOURCE, reference_temp, 4, FLOAT_TYPE);
+        send_uart_request(uart_filestream, SEND_CODE, SET_RT_CODE, reference_temp, 4, FLOAT_TYPE);
       }
       // send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);
       printf("Reflow timer -> %d\n", reflow_timer_count);
     }
 
-    if(tr_source == 1 || tr_source == 3){
+    if(ref_temperature_source == 1 || ref_temperature_source == 3){
       read_bme_temperature(&external_temp);
       show_temp_and_mode_on_lcd("TERMINAL ", internal_temp, reference_temp, external_temp);
     }else{
@@ -175,12 +136,12 @@ int main(){
       break;
     case 3:
       printf("Controle via potenciometro...\n\n");
-      tr_source = 2;
+      ref_temperature_source = 2;
       send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 0, 1, INTEGER_TYPE);
       break;
     case 4:
       printf("Controle via curva...\n\n");
-      tr_source = 3;
+      ref_temperature_source = 3;
       send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);
       read_reflow_csv(reflow_times, reflow_temps, 10);
       break;

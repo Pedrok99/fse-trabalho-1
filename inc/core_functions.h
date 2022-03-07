@@ -13,6 +13,7 @@
 #define USER_ACTION_CODE 0xC3
 #define CONTROL_SIGNAL_CODE 0xD1
 #define TR_CMD_SOURCE 0xD2
+#define SET_RT_CODE 0xD2
 #define SYSTEM_STATE_CODE 0xD3
 #define TR_SOURCE_CODE 0xD4
 #define MAX_READ_ATTEMPTS 5
@@ -24,5 +25,6 @@
 
 int set_system_state(int uart_filestream, int system_state);
 int set_reference_temperature_source(int uart_filestream, int reference_temperature_source);
+void set_reference_temperature(int uart_filestream, int reference_temperature);
 
 #endif

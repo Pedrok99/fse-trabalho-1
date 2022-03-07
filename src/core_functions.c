@@ -25,3 +25,7 @@ int set_reference_temperature_source(int uart_filestream, int reference_temperat
   }while (response == -1.0 && read_attempts>= MAX_READ_ATTEMPTS);
   return response; 
 }
+
+void set_reference_temperature(int uart_filestream, int reference_temperature){
+  send_uart_request(uart_filestream, SEND_CODE, SET_RT_CODE, reference_temperature, 4, INTEGER_TYPE);
+}
