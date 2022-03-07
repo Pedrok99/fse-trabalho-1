@@ -127,7 +127,7 @@ int main(){
     default: // reflow
       reflow_timer_count+=1.3;
       // reflow_timer_count+=10;
-      reflow_timer_count = (int)reflow_timer_count%600;
+      // reflow_timer_count = reflow_timer_count%600.0;
       
       printf("Posição no vetor ===> %d\n", (int)(reflow_timer_count/60));
       if(current_reflow_pos != (int)(reflow_timer_count/60)){
