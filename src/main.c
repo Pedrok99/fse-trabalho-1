@@ -62,7 +62,7 @@ int main(){
     set_reference_temperature_source(uart_filestream, FROM_POTENTIOMETER);
     break;
   case 3:
-    send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);  
+    set_reference_temperature_source(uart_filestream, FROM_TERMINAL);
     read_reflow_csv(reflow_times, reflow_temps, 10);
     break;
   
@@ -79,18 +79,21 @@ int main(){
 
     // get internal temp =========================================
     printf("Lendo temperatura interna\n");
-    send_uart_request(uart_filestream, REQUEST_CODE, INTERNAL_TEMP_CODE, NO_DATA_FLAG, 0, FLOAT_TYPE);
-    do{
-      internal_temp = read_uart_response(uart_filestream, FLOAT_TYPE);
-      read_attempts++;
-    }while (internal_temp == -1.0 && read_attempts>= MAX_READ_ATTEMPTS);
-    read_attempts = 0;
+    // send_uart_request(uart_filestream, REQUEST_CODE, INTERNAL_TEMP_CODE, NO_DATA_FLAG, 0, FLOAT_TYPE);
+    // do{
+    //   internal_temp = read_uart_response(uart_filestream, FLOAT_TYPE);
+    //   read_attempts++;
+    // }while (internal_temp == -1.0 && read_attempts>= MAX_READ_ATTEMPTS);
+    // read_attempts = 0;
+
+    internal_temp = get_internal_temperature(uart_filestream);
 
 
 
     // get TR=========================================
     if(ref_temperature_source == 1){
-      send_uart_request(uart_filestream, SEND_CODE, SET_RT_CODE, reference_temp, 4, FLOAT_TYPE);
+      // send_uart_request(uart_filestream, SEND_CODE, SET_RT_CODE, reference_temp, 4, FLOAT_TYPE);
+      set_reference_temperature(uart_filestream, reference_temp);
     }else if(ref_temperature_source == 2){
       send_uart_request(uart_filestream, REQUEST_CODE, POTENTIOMETER_TEMP_CODE, NO_DATA_FLAG, 0, FLOAT_TYPE);
       do{

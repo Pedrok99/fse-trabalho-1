@@ -32,7 +32,7 @@ void read_reflow_csv(int *times, int *temperatures, int size){
 
   char line[200];
   FILE *csv_pointer;
-  int time, temp, st;
+  int time, temp;
 
   csv_pointer = fopen("curva_reflow.csv", "r");
   

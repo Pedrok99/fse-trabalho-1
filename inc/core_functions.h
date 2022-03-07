@@ -26,5 +26,5 @@
 int set_system_state(int uart_filestream, int system_state);
 int set_reference_temperature_source(int uart_filestream, int reference_temperature_source);
 void set_reference_temperature(int uart_filestream, int reference_temperature);
-
+float get_internal_temperature(int uart_filestream);
 #endif
