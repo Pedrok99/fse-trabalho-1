@@ -161,6 +161,7 @@ int main(){
     case 1:
       printf("Ligando sistema...\n\n");
       send_uart_request(uart_filestream, SEND_CODE, SYSTEM_STATE_CODE, 1, 1, INTEGER_TYPE);
+      set_system_state(uart_filestream, ON);
       break;
     case 2:
       finish_app(0);
@@ -168,13 +169,14 @@ int main(){
     case 3:
       printf("Controle via potenciometro...\n\n");
       ref_temperature_source = 2;
-      send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 0, 1, INTEGER_TYPE);
+      set_reference_temperature_source(uart_filestream, FROM_POTENTIOMETER);
       break;
     case 4:
       printf("Controle via curva...\n\n");
       ref_temperature_source = 3;
-      send_uart_request(uart_filestream, SEND_CODE, TR_SOURCE_CODE, 1, 1, INTEGER_TYPE);
+      set_reference_temperature_source(uart_filestream, FROM_TERMINAL);
       read_reflow_csv(reflow_times, reflow_temps, 10);
+      reflow_timer_count = 0;
       break;
     
     default:
