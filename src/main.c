@@ -22,8 +22,11 @@ void finish_app(int value){
   send_uart_request(uart_filestream, SEND_CODE, CONTROL_SIGNAL_CODE, 0, 4, INTEGER_TYPE);  
   update_pin_value(FAN_PIN, 0);
   update_pin_value(RESISTOR_PIN, 0);
-
+  ClrLcd();
+  lcdLoc(LINE1);
+  typeln("Finalizado ;)");
   close_uart(uart_filestream);
+  printf("Sistema desligado...\n\n");
   exit(0);
 }
 
@@ -61,6 +64,7 @@ int main(){
   int rasp_number = 0;
   int reflow_times[10], reflow_temps[10], /*reflow_timer_count = 0,*/ current_reflow_pos = -1;
   float reflow_timer_count = 0.0;
+  float kp, ki, kd;
   // ===================================================main================================================================
 
   uart_filestream = init_uart();
@@ -91,13 +95,21 @@ int main(){
     break;
   }
  
-  printf("\n\n Escolha a resp a ser usada:\n\n1-rasp42 (Kp = 30.0 , Ki = 0.2, Kd = 400.0)\n2-rasp43 (Kp = 20.0, Ki = 0.1, Kd = 100.0)\n\n");
+  printf("\n\n Escolha as constantes a serem usadas:\n\n1-rasp42 (Kp = 30.0 , Ki = 0.2, Kd = 400.0)\n2-rasp43 (Kp = 20.0, Ki = 0.1, Kd = 100.0)\n3-Personalizadas\n\n");
   scanf("%d", &rasp_number);
 
   if(rasp_number == 1){
     pid_configura_constantes(30.0,  0.2, 400.0); // resp 2
-  }else{
+  }else if(rasp_number == 2){
     pid_configura_constantes(20.0,  0.1, 100.0); // resp 3
+  }else{
+    printf("Insira Kp:\n");
+    scanf("%f", &kp);
+    printf("Insira Ki:\n");
+    scanf("%f", &ki);
+    printf("Insira Kd:\n");
+    scanf("%f", &kd);
+    pid_configura_constantes(kp, ki, kd); // personalizado
   }
 
   set_system_state(uart_filestream, ON);
@@ -129,13 +141,11 @@ int main(){
       // reflow_timer_count+=10;
       // reflow_timer_count = reflow_timer_count%600.0;
       
-      printf("Posição no vetor ===> %d\n", (int)(reflow_timer_count/60));
       if(current_reflow_pos != (int)(reflow_timer_count/60)){
         current_reflow_pos = (int)(reflow_timer_count/60);
         reference_temp = reflow_temps[current_reflow_pos];
         set_reference_temperature(uart_filestream, reference_temp);
       }
-      printf("Reflow timer -> %f\n", reflow_timer_count);
       break;
     }
 
@@ -143,7 +153,6 @@ int main(){
     external_temp == -1.0 ? (external_temp = last_external_temp) : (last_external_temp = external_temp);
 
     write_lcd_with_mode(ref_temperature_source, internal_temp, reference_temp, external_temp);
-    printf("Pegando comando do usuario\n");
 
     user_action = get_user_command(uart_filestream);
 
@@ -173,7 +182,6 @@ int main(){
     }
 
     // pid calc 
-    printf("Calculando PID\n");
     pid_atualiza_referencia(reference_temp);
     pid_computed_value = pid_controle(internal_temp);
     if(pid_computed_value > 0){

@@ -34,7 +34,7 @@ O sistema como um todo é composto por:
 ## Como executar
  
 ### Compilação
-Para compilar, na página do repositório, utilize o seguinte comando:
+Para compilar, na raiz do projeto, utilize o seguinte comando:
  
 ##### `make`
  
